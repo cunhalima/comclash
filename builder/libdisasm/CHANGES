@@ -1,0 +1,5 @@
+FILE                CHANGES
+===============     ============================================================================
+x86_disasm.c        Fixed a warning on pointer arithmetic
+ia32_insn.c         Removed the restriction on segment override prefixes for branch instructions
+libdis.h            Enlarged MAX_OP_STRING to 64 bytes

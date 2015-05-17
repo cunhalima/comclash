@@ -26,3 +26,11 @@
 *.exe
 *.out
 *.app
+builder/builder
+
+# patches (these files are automatically generated)
+patch/execfg.lua
+
+# src diretory
+src/*
+!src/README

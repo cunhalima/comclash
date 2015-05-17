@@ -6,7 +6,7 @@ Source tree:
 
   * doc/        --> Documentation
   * builder/    --> the builder source code
-  * patches/    --> THIS IS WHERE YOU SHOULD EDIT!!!! these files will be used to rebuild de sources
+  * patch/      --> THIS IS WHERE YOU SHOULD EDIT!!!! these files will be used to rebuild de sources
   * src/        --> Here go the RE-generated sources. Don't edit these files, because ALL CHANGES HERE WILL BE LOST ON NEXT REGENERATION
 
 ### Step by step:
