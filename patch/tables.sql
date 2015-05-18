@@ -6,6 +6,7 @@ CREATE TABLE tab_segment(
   use         INTEGER NOT NULL,
   address     INTEGER NOT NULL,
   priority    INTEGER NOT NULL,
+  size        INTEGER NOT NULL,
   UNIQUE(address, priority)
 );
 

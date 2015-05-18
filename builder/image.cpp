@@ -193,6 +193,7 @@ void IMG_fixrelocations(Image_t *img) {
 
 void IMG_createseg(Image_t *img, const char *name, const char *sclass, int align, int use, uaddr_t addr, int priority) {
     assert(img != NULL);
+    #if 0
 
     sqlq_t s(img->db, "INSERT INTO tab_segment(name, class, align, use, address, priority) VALUES(@A, @B, @C, @D, @E, @F)");
     s.bind_str(1, name);
@@ -206,10 +207,51 @@ void IMG_createseg(Image_t *img, const char *name, const char *sclass, int align
     } else {
         printf("; Created segment %s\n", name);
     }
+    #endif
+    printf("creating segment  %s\n", name);
+
+    int secid = uaddr_sec(addr);
+    int secsize = IMG_getsecsize(img, secid);
+    uaddr_t secstart = uaddr_mk(secid, 0);
+    uaddr_t secend = uaddr_mk(secid, secsize);
+    sqlq_t sq(img->db, "SELECT segid,address,size FROM tab_segment WHERE address >= @A AND address < @B ORDER BY address ASC");
+    sq.bind_int(1, secstart);
+    sq.bind_int(2, secend);
+    int size = secend - addr;
+    while(sq.step()) {
+        int this_segid = sq.col_int(0);
+        int this_start = sq.col_int(1);
+        int this_size = sq.col_int(2);
+        int this_end = this_start + this_end;
+        if (this_start > addr) {
+            // muda o size do atual
+            sqlq_t upd(img->db, "UPDATE tab_segment SET size=@A WHERE segid=@B");
+            ins.bind_int(1, addr - this_start);
+            ins.bind_int(2, this_segid);
+            size = this_end - addr;
+            break;
+        }
+    }
+
+    sqlq_t s(img->db, "INSERT INTO tab_segment(name, class, align, use, address, priority, size) VALUES(@A, @B, @C, @D, @E, @F, @G)");
+    s.bind_str(1, name);
+    s.bind_str(2, sclass);
+    s.bind_int(3, align);
+    s.bind_int(4, use);
+    s.bind_int(5, addr);
+    s.bind_int(6, priority);
+    s.bind_int(7, size);
+    if (!s.run()) {
+        printf("; Create segment error\n");
+    } else {
+        printf("; Created segment %s\n", name);
+    }
+
 }
 
 void IMG_createslice(Image_t *img, const char *name, uaddr_t addr) {
     assert(img != NULL);
+    #if 0
 
     printf("creating slice for %s\n", name);
 
@@ -219,6 +261,47 @@ void IMG_createslice(Image_t *img, const char *name, uaddr_t addr) {
     if (modid == 0) {
         return;
     }
+
+    sqlq_t segq(img->db, "SELECT segid FROM tab_segment WHERE address <= @A AND address + size > @B");
+    segq.bind_int(1, addr);
+    segq.bind_int(2, addr);
+    int segid = segq.answer();
+    if (segid == 0) {
+        return;
+    }
+
+    int secid = uaddr_sec(addr);
+    int secsize = IMG_getsecsize(img, secid);
+    uaddr_t secstart = uaddr_mk(secid, 0);
+    uaddr_t secend = uaddr_mk(secid, secsize);
+    sqlq_t sq(img->db, "SELECT address,size FROM tab_modslice WHERE address >= @A AND address < @B ORDER BY address ASC");
+    sq.bind_int(1, secstart);
+    sq.bind_int(2, secend);
+    int size = secend - addr;
+    while(sq.step()) {
+        int this_start = sq.col_int(0);
+        int this_size = sq.col_int(1);
+        int this_end = this_start + this_end;
+        if (this_start > addr) {
+            // muda o size do atual
+            sqlq_t upd(img->db, "UPDATE tab_modslice SET size=@A WHERE address=@B");
+            ins.bind_int(1, addr - this_start);
+            ins.bind_int(2, this_start);
+            size = this_end - addr;
+            break;
+        }
+    }
+    sqlq_t ins(img->db, "INSERT INTO tab_modslice(address, size, module, segment) VALUES(@A, @B, @C, @D)");
+    ins.bind_int(1, addr);
+    ins.bind_int(2, size);
+    ins.bind_int(3, modid);
+    ins.bind_int(4, segid);
+    if (!ins.run()) {
+        printf("; Create slice error\n");
+    } else {
+        printf("; Created slice %s\n", name);
+    }
+    #endif
 
     #if 0
 
