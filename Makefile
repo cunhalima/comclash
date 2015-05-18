@@ -1,7 +1,7 @@
 DOSBOX=dosbox
 BUILDER=builder/builder
 
-.PHONY: all exe setup-original setup-mlook run gen gclean builder bclean compare
+.PHONY: all exe setup-original setup-mlook run gen gclean builder bclean compare reset val sql
 
 all: $(EXE)
 
@@ -30,8 +30,16 @@ gclean:
 bclean:
 	@$(MAKE) --no-print-directory -C builder clean
 
-restart-re: builder
-	@./$(BUILDER) patch/restart-re.lua
+reset: builder
+	@echo "Resetting db"
+	@./$(BUILDER) patch/reset.lua
+
+val: builder
+	@echo "Running valgrind and resetting db"
+	@valgrind --tool=memcheck ./$(BUILDER) patch/reset.lua
 
 gen: builder
 	@./$(BUILDER) patch/gen.lua
+
+sql:
+	sqlite3 patch/db.db

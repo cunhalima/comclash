@@ -299,6 +299,17 @@ Buffer_t *BUF_createfromfile(const char *filename) {
     return buffer;
 }
 
+Buffer_t *BUF_createfromfilecstr(const char *filename) {
+    Buffer_t *buffer;
+
+    buffer = BUF_createfromfile(filename);
+    if (buffer != NULL) {
+        BUF_addsize(buffer, 1);
+        buffer->data[buffer->size - 1] = '\0';
+    }
+    return buffer;
+}
+
 bool BUF_savetofile(const Buffer_t *buffer, const char *filename) {
     assert(buffer != NULL);
     FILE *fs = fopen(filename, "wb");

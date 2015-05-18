@@ -1,7 +1,7 @@
 CPP=g++
 CPPFLAGS=-std=c++11 -O2 -Wall -Werror -pedantic -I./libdisasm -Wno-unused-variable -Wno-unused-but-set-variable -Wno-unused-function
 LDFLAGS=-L./libdisasm -ldisasm -lsqlite3 -llua5.2 -lncurses
-OBJS=main.o buffer.o
+OBJS=main.o buffer.o image.o leload.o sqlq.o
 TARGET=builder
 LIBDIS=libdisasm/libdisasm.a
 

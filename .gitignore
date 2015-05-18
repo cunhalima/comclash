@@ -30,7 +30,11 @@ builder/builder
 
 # patches (these files are automatically generated)
 patch/execfg.lua
+patch/db.db
 
 # src diretory
 src/*
 !src/README
+
+# Doxygen doc
+builder/doc/*

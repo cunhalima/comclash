@@ -43,6 +43,7 @@ void BUF_insertvoid(Buffer_t *buffer, int pos, int size);
 void BUF_removearea(Buffer_t *buffer, int pos, int size);
 void BUF_free(Buffer_t *buffer);
 Buffer_t *BUF_createfromfile(const char* filename);
+Buffer_t *BUF_createfromfilecstr(const char* filename);
 bool BUF_savetofile(const Buffer_t *buffer, const char* filename);
 void BUF_reset(Buffer_t *buffer);
 void BUF_writecstr(Buffer_t *buffer, const char* text);
@@ -50,9 +51,25 @@ void BUF_writeomfstr(Buffer_t *buffer, const char* text);
 
 // image.cpp
 struct Image_t;
-void *IMG_getptr(Image_t *img, uaddr_t addr);
+
+void IMG_addsection(Image_t *img, int secid, int secuse, int secvirt);
+void IMG_addsecsize(Image_t *img, int secid, int size);
 Image_t *IMG_create(void);
 void IMG_free(Image_t *img);
+void IMG_begintransaction(Image_t *img);
+void IMG_endtransaction(Image_t *img);
+bool IMG_dbopen(Image_t *img, const char *dbname);
+void IMG_dbclose(Image_t *img);
+void IMG_sqlfile(Image_t *img, const char *filename);
+void IMG_sql(Image_t *img, const char *sql);
+void *IMG_getptr(Image_t *img, uaddr_t addr);
+bool IMG_loadexe(Image_t *img, const char *filename, bool addrelocs, bool createsections, bool loaddata, bool compare);
+void IMG_addreloc(Image_t *img, uaddr_t afrom, uaddr_t ato, int fix_size, int disp);
+void IMG_addlabel(Image_t *img, uaddr_t addr, const char *name);
+void IMG_movelabel(Image_t *img, int labid, uaddr_t oldaddr, uaddr_t newaddr);
+void IMG_fixrelocations(Image_t *img);
+void IMG_createseg(Image_t *img, const char *name, const char *sclass, int align, int use, uaddr_t addr, int priority);
+void IMG_createslice(Image_t *img, const char *name, uaddr_t addr);
 
 #endif
 

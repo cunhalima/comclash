@@ -6,6 +6,7 @@
 struct Section_t {
     int use;
     int size;
+    bool virt;
     Buffer_t *buf_data;
     Buffer_t *buf_plan;
     uint8_t *data;          // if no data, then virtual
@@ -19,6 +20,8 @@ struct Image_t {
     int numsections;
     sqlite3 *db;
 };
+
+Section_t *IMG_getsection(Image_t *img, int secid);
 
 #define ST_NONE     0
 #define ST_TEXT     1
