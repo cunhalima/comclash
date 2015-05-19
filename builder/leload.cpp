@@ -285,7 +285,7 @@ bool IMG_loadexe(Image_t *img, const char *filename, bool addrelocs, bool create
             memcpy(IMG_getptr(img, uaddr_mk(id, 0)), BUF_getptrat(inbuf, secpos), size);
         }
         if (compare) {
-            #if 0
+            #if 1
             if (!IMG_comparesection(img, id, vrsize, BUF_getptrat(inbuf, secpos))) {
                 printf("problem found\n");
                 BUF_free(fix_page);
@@ -302,7 +302,7 @@ bool IMG_loadexe(Image_t *img, const char *filename, bool addrelocs, bool create
                 IMG_addsecsize(img, id + 1, bss_size);            
             }
             if (compare) {
-                #if 0
+                #if 1
                 if (!IMG_comparesection(img, id, vrsize, NULL)) {
                     printf("problem found\n");
                     BUF_free(fix_page);
@@ -415,10 +415,10 @@ bool IMG_loadexe(Image_t *img, const char *filename, bool addrelocs, bool create
                         //IMG_addfixup_fast(img, afrom, ato, 0, 0, NULL, fix_size);
                         if (addrelocs) {
                             //printf("%d\n", num_eff_fixups);
-                            IMG_addreloc(img, afrom, ato, fix_size, 0);
+                            IMG_addreloc(img, afrom, ato, fix_size, 0, RELOC_ABS);
                         }
                         if (compare) {
-                            #if 0
+                            #if 1
                             if (!IMG_comparereloc(img, afrom, ato, fix_size)) {
                                 printf("problem found\n");
                                 BUF_free(fix_page);
@@ -442,7 +442,7 @@ bool IMG_loadexe(Image_t *img, const char *filename, bool addrelocs, bool create
         IMG_endtransaction(img);
     }
     if (compare) {
-        //IMG_comparestats(img, num_sections, num_eff_fixups);
+        IMG_comparestats(img, num_sections, num_eff_fixups);
         printf("Done\n");
     }
     BUF_free(fix_page);

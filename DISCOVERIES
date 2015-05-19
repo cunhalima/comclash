@@ -1,0 +1,41 @@
+Watcom Initialization routines:
+===============================
+
+See:
+        OW/bld/watcom/h/rtinit.h            -- Defines YIXI, XI, YI macros
+        OW/bld/watcom/h/rtprior.h           -- Defines priority constants (some called by exit(), others by __exit()) -- there's a module called DTOR?
+        OW/bld/clib/startup/h/initfini.h    -- __InitRtns and __FiniRtns
+        OW/bld/clib/startup/c/initrtns.c    -- __InitRtns and __FiniRtns
+
+        YIXI( TS_SEG_XIB, _Start_XI, 0, 0 )
+        #pragma data_seg( ".rtl$xie", "DATA" );
+        YIXI( TS_SEG_XIE, _End_XI, 0, 0 )
+        #pragma data_seg( ".rtl$yib", "DATA" );
+        YIXI( TS_SEG_YIB, _Start_YI, 0, 0 )
+        #pragma data_seg( ".rtl$yie", "DATA" );
+        YIXI( TS_SEG_YIE, _End_YI, 0, 0 )
+
+
+_Start_XI       (XIB)       Fica em:    ida 2C6700 --> 0x30019700
+_End_XI         (XIE)       Fica em:    ida 2C6766 --> 0x30019766
+
+_Start_YI       (YIB)       Fica em:    ida 2C6766 --> 0x30019766
+_End_YI         (YIE)       Fica em:    ida 2C676C --> 0x3001976C
+
+mingames.asm codigo  comeca  em IDA 2106F1
+mingames.asm codigo  termina em IDA 215362
+
+mingames.asm dados   comeca  em IDA 2B2910
+mingames.asm dados   termina em IDA 2B2B0C
+
+
+========================================================
+HOW KEY BINDING WORKS
+=======================================================
+
+a) Function $$CMN_Init_$$ calls function $$init_something$$.
+
+b) Function $$init_something$$ does some unknown stuff and then starts registering keys at
+     ::0x204131::. In this exact plane, MMOD patches a jump to ::0x204511:: to circumvent the bindings
+
+

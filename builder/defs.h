@@ -8,6 +8,9 @@ typedef signed int uaddr_t;
 #define uaddr_off(x) ((x)&0x0FFFFFFF)
 #define uaddr_mk(x,y) ((((x)&7)<<28)|((y)&0x0FFFFFFF))
 
+int addr_to_ida(uaddr_t addr);
+uaddr_t ida_to_addr(int addr);
+
 // buffer.cpp
 struct Buffer_t;
 int BUF_tell(const Buffer_t *buffer);
@@ -54,6 +57,7 @@ struct Image_t;
 
 void IMG_addsection(Image_t *img, int secid, int secuse, int secvirt);
 void IMG_addsecsize(Image_t *img, int secid, int size);
+int IMG_getsecsize(Image_t *img, int secid);
 Image_t *IMG_create(void);
 void IMG_free(Image_t *img);
 void IMG_begintransaction(Image_t *img);
@@ -64,12 +68,49 @@ void IMG_sqlfile(Image_t *img, const char *filename);
 void IMG_sql(Image_t *img, const char *sql);
 void *IMG_getptr(Image_t *img, uaddr_t addr);
 bool IMG_loadexe(Image_t *img, const char *filename, bool addrelocs, bool createsections, bool loaddata, bool compare);
-void IMG_addreloc(Image_t *img, uaddr_t afrom, uaddr_t ato, int fix_size, int disp);
+void IMG_addreloc(Image_t *img, uaddr_t afrom, uaddr_t ato, int fix_size, int disp, int type);
 void IMG_addlabel(Image_t *img, uaddr_t addr, const char *name);
 void IMG_movelabel(Image_t *img, int labid, uaddr_t oldaddr, uaddr_t newaddr);
 void IMG_fixrelocations(Image_t *img);
-void IMG_createseg(Image_t *img, const char *name, const char *sclass, int align, int use, uaddr_t addr, int priority);
+void IMG_createseg(Image_t *img, const char *name, const char *sclass, int align, int use, uaddr_t addr, int priority, int size);
 void IMG_createslice(Image_t *img, const char *name, uaddr_t addr);
+void IMG_fixlabels(Image_t *img, int secid);
+void IMG_addrlabels(Image_t *img, int secid);
+void IMG_setmodules(Image_t *img);
+void IMG_setsegments(Image_t *img);
+void IMG_setlabname(Image_t *img, uaddr_t addr, const char *name);
+
+// disasm
+void IMG_disasm(Image_t *img);
+#define RELOC_ABS   0
+#define RELOC_REL   1
+#define RELOC_CONST 2
+
+#define PLAN_INSIDE     0x80
+#define PLAN_MASK       0xF8
+#define PLAN_MAXSIZE    0x1FFFFF        // enough room for more, but needs to adjust plan_size() and plan_setsize
+#define PLAN_UNKNOWN    0x00
+#define PLAN_DATA       0x10
+#define PLAN_STR        0x18
+#define PLAN_ALIGN      0x20
+#define PLAN_CODE       0x30
+#define PLAN_HASSIZE(p,x) (p[x] >= PLAN_DATA && p[x] < (PLAN_CODE+7))
+#define PLAN_ISCODE(p,x) ((p[x] & PLAN_MASK) == PLAN_CODE)
+#define PLAN_ISDATA(p,x) ((p[x] >= PLAN_DATA && p[x] < PLAN_CODE)
+#define PLAN_ISSTR(p,x) ((p[x] & PLAN_MASK) == PLAN_STR)
+#define PLAN_ISALIGN(p,x) ((p[x] & PLAN_MASK) == PLAN_ALIGN)
+int plan_size(const uint8_t *p, int index);
+void plan_setsize(uint8_t *p, int index, int size);
+void plan_convert(const char *oldname, const char *newname);
+void IMG_loadplan(Image_t *img, int secid, const char *filename);
+
+// compare
+bool IMG_comparesection(Image_t *img, int secid, int size, void *data);
+void IMG_comparestats(Image_t *img, int num_sections, int num_relocs);
+bool IMG_comparereloc(Image_t *img, uaddr_t afrom, uaddr_t ato, int fix_size);
+
+// walk
+void IMG_walkplan(Image_t *img, int secid);
+bool my_isprintable(char c);
 
 #endif
-

@@ -2,3 +2,48 @@ Terminar o add slice (colocar em ordem os slcies que ja tem pra achar o tamanho)
 
 talvez terminar o swap do image.cpp
 e fazer segmento qdo cria dizer qual o tamanho dele
+
+
+
+O linker colocou o L30005910 (que está nos dados de mingames) em 
+                   L30001D6C
+
+Agora resta saber o que era pra estar ali. Por que ele pos justamente ali?
+    L30001D6C é o início de DATA
+
+to percebendo que o align entre modulos eh de 16 e sempre enche de zeros
+   o align no mesmo modulo enche de nops e parece que eh de 4
+
+cstart comeca em     1DE000
+poco   comeca em     1E59D3
+game_facio coneca em 1E7559
+game_aloba comeca em 1E8B83
+aaa        comeca em 1EE3A3  ; rever inicio
+bbb        comeca em 1EEBEC  ; rever inicio
+ccc        comeca em 1EEF1B  ; rever inicio
+ddd        comeca em 1EF37E  ; rever inicio
+fff        comeca em 1F0AEF
+ggg        comeca em 1F0BB1
+hhh        comeca em 1F0C7F
+iii        comeca em 1F0ED5
+jjj        comeca em 1F139F
+kkk        comeca em 1F1C4C
+lll        comeca em 1F1E8F
+mmm        comeca em 1F2E07
+nnn        comeca em 1F7002
+ooo        comeca em 1F72C1
+ppp        comeca em 1FA061
+qqq        comeca em 1FB36F
+
+
+
+lib_open comeca em   24DCBF e vai ateh 24E0C3
+lib_pal comeca em    24E0C3 e vai ateh 24EA63
+xenga comeca em      24EA63 e vai ateh 24EC10
+lib_bios comeca em   24EC10 e vai ateh 24EC40
+AIL comeca em        24EC40...
+
+
+
+AIL comeca em 24EC40
+AIL data comeca em 2B3B28

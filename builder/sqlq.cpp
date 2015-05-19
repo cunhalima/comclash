@@ -30,6 +30,10 @@ int sqlq_t::col_int(int pos) {
     return sqlite3_column_int(sta, pos);
 }
 
+const char *sqlq_t::col_str(int pos) {
+    return (const char *)sqlite3_column_text(sta, pos);
+}
+
 void sqlq_t::bind_int(int pos, int v) {
     sqlite3_bind_int(sta, pos, v);
 }
@@ -50,6 +54,11 @@ void sqlq_t::prepare(const char *str, int index_col_arg, int sentinel_arg) {
     sqlite3_prepare_v2(db, str, -1, &sta, NULL);
     index_col = index_col_arg;
     sentinel = sentinel_arg;
+}
+
+void sqlq_t::prepare(sqlite3* db_arg, const char *str, int index_col_arg, int sentinel_arg) {
+    db = db_arg;
+    prepare(str, index_col_arg, sentinel_arg);
 }
 
 int sqlq_t::answer(int sentinel) {

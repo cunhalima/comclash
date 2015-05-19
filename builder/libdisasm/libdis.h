@@ -828,9 +828,14 @@ size_t x86_invariant_disasm( unsigned char *buf, int buf_len,
  * this used x86_invariant_disasm since it faster than x86_disasm */
 size_t x86_size_disasm( unsigned char *buf, unsigned int buf_len );
 
+/* added by Alex Reimann Cunha Lima */
+void x86_reloc_reset(void);
+void x86_reloc_send(unsigned int x, const char *name);
+int x86_reloc_check(void);
+
 #ifdef __cplusplus
 }
 #endif
 
-
 #endif
+

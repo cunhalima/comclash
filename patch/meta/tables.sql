@@ -27,7 +27,11 @@ CREATE TABLE tab_modslice(
 CREATE TABLE tab_label(
   labid       INTEGER PRIMARY KEY NOT NULL,
   address     INTEGER UNIQUE,
-  name        TEXT UNIQUE
+  name        TEXT UNIQUE,
+  module      INTEGER,
+  segment     INTEGER,
+  FOREIGN KEY(module) REFERENCES tab_module(modid) ON DELETE RESTRICT,
+  FOREIGN KEY(segment) REFERENCES tab_segment(segid) ON DELETE RESTRICT
 );
 
 CREATE TABLE tab_reloc(
@@ -35,5 +39,8 @@ CREATE TABLE tab_reloc(
   size        INTEGER NOT NULL,
   label       INTEGER NOT NULL,
   disp        INTEGER NOT NULL,
-  FOREIGN KEY(label) REFERENCES tab_label(labid) ON DELETE RESTRICT
+  type        INTEGER NOT NULL,
+  module      INTEGER,
+  FOREIGN KEY(label) REFERENCES tab_label(labid) ON DELETE RESTRICT,
+  FOREIGN KEY(module) REFERENCES tab_module(modid) ON DELETE RESTRICT
 );

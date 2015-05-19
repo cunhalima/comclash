@@ -1,9 +1,42 @@
 #include <cstdio>
 #include <cstring>
 //#include <sqlite3.h>
+#include <libdis.h>
 #include <unistd.h>
 #include <lua5.2/lua.hpp>
 #include "defs.h"
+
+uaddr_t ida_to_addr(int addr) {
+    if (addr >= 0x2C6770) {
+        return uaddr_mk(4, addr - 0x2C6770);
+    }
+    if (addr >= 0x2AD000) {
+        return uaddr_mk(3, addr - 0x2AD000);
+    }
+    if (addr >= 0x1DE000) {
+        return uaddr_mk(1, addr - 0x1DE000);
+    }
+    if (addr >= 0x123000) {
+        return uaddr_mk(2, addr - 0x123000);
+    }
+    return 0;
+}
+
+int addr_to_ida(uaddr_t addr) {
+    if (addr >= uaddr_mk(4, 0)) {
+        return addr - uaddr_mk(4, 0) + 0x2C6770;
+    }
+    if (addr >= uaddr_mk(3, 0)) {
+        return addr - uaddr_mk(3, 0) + 0x2AD000;
+    }
+    if (addr >= uaddr_mk(2, 0)) {
+        return addr - uaddr_mk(2, 0) + 0x123000;
+    }
+    if (addr >= uaddr_mk(1, 0)) {
+        return addr - uaddr_mk(1, 0) + 0x1DE000;
+    }
+    return 0;
+}
 
 static lua_State *L;
 static Image_t *g_img;
@@ -58,7 +91,7 @@ static int l_img_fixrel(lua_State *L) {
 }
 
 static int l_seg_create(lua_State *L) {
-    if (lua_gettop(L) != 6) {
+    if (lua_gettop(L) != 7) {
         printf("img_create: wrong number of arguments\n");
         return 0;
     }
@@ -68,7 +101,18 @@ static int l_seg_create(lua_State *L) {
     int use = luaL_checkinteger(L, 4);
     uaddr_t addr = luaL_checkinteger(L, 5);
     int p = luaL_checkinteger(L, 6);
-    IMG_createseg(g_img, n, c, align, use, addr, p);
+    int s = luaL_checkinteger(L, 7);
+    IMG_createseg(g_img, n, c, align, use, addr, p, s);
+    return 0;
+}
+
+static int l_begin_transaction(lua_State *L) {
+    IMG_begintransaction(g_img);
+    return 0;
+}
+
+static int l_end_transaction(lua_State *L) {
+    IMG_endtransaction(g_img);
     return 0;
 }
 
@@ -83,11 +127,88 @@ static int l_slice_create(lua_State *L) {
     return 0;
 }
 
+static int l_plan_convert(lua_State *L) {
+    if (lua_gettop(L) != 2) {
+        printf("plan_convert: wrong number of arguments\n");
+        return 0;
+    }
+    const char *a = luaL_checkstring(L, 1);
+    const char *b = luaL_checkstring(L, 2);
+    plan_convert(a, b);
+    return 0;
+}
+
+static int l_img_loadplan(lua_State *L) {
+    if (lua_gettop(L) != 2) {
+        printf("plan_convert: wrong number of arguments\n");
+        return 0;
+    }
+    int a = luaL_checkinteger(L, 1);
+    const char *b = luaL_checkstring(L, 2);
+    IMG_loadplan(g_img, a, b);
+    return 0;
+}
+
+static int l_img_fixlabels(lua_State *L) {
+    if (lua_gettop(L) != 1) {
+        printf("plan_convert: wrong number of arguments\n");
+        return 0;
+    }
+    int a = luaL_checkinteger(L, 1);
+    IMG_fixlabels(g_img, a);
+    return 0;
+}
+
+static int l_img_addrlabels(lua_State *L) {
+    if (lua_gettop(L) != 1) {
+        printf("plan_convert: wrong number of arguments\n");
+        return 0;
+    }
+    int a = luaL_checkinteger(L, 1);
+    IMG_addrlabels(g_img, a);
+    return 0;
+}
+
+static int l_img_setsegments(lua_State *L) {
+    IMG_setsegments(g_img);
+    return 0;
+}
+
+static int l_img_setmodules(lua_State *L) {
+    IMG_setmodules(g_img);
+    return 0;
+}
+
+static int l_img_disasm(lua_State *L) {
+    IMG_disasm(g_img);
+    return 0;
+}
+
+static int l_img_compare(lua_State *L) {
+    const char *f = luaL_checkstring(L, 1);
+    IMG_loadexe(g_img, f, false, false, false, true);
+    return 0;
+}
+
+static int l_img_walkplan(lua_State *L) {
+    int secid = luaL_checkinteger(L, 1);
+    IMG_walkplan(g_img, secid);
+    return 0;
+}
+
+static int l_NA(lua_State *L) {
+    uaddr_t addr = luaL_checkinteger(L, 1);
+    const char *name = luaL_checkstring(L, 2);
+    IMG_setlabname(g_img, addr, name);
+    return 0;
+}
+
 int main(int argc, char **argv) {
     if (argc != 2) {
         printf("Usage: %s <script-file>\n", argv[0]);
         return -1;
     }
+    x86_init(opt_none, NULL, NULL);
     lua_State *L = luaL_newstate();
     luaL_openlibs(L);
     lua_regfun(L, unlink);
@@ -98,6 +219,18 @@ int main(int argc, char **argv) {
     lua_regfun(L, img_fixrel);
     lua_regfun(L, seg_create);
     lua_regfun(L, slice_create);
+    lua_regfun(L, plan_convert);
+    lua_regfun(L, img_loadplan);
+    lua_regfun(L, img_fixlabels);
+    lua_regfun(L, img_addrlabels);
+    lua_regfun(L, img_setmodules);
+    lua_regfun(L, img_setsegments);
+    lua_regfun(L, img_disasm);
+    lua_regfun(L, img_compare);
+    lua_regfun(L, img_walkplan);
+    lua_regfun(L, begin_transaction);
+    lua_regfun(L, end_transaction);
+    lua_regfun(L, NA); // set label name (ASSEMBLY -- no underscore)
     if (luaL_dofile(L, argv[1])) {
         printf("LUA ERROR: %s\n", lua_tostring(L, -1));
     }
@@ -106,5 +239,6 @@ int main(int argc, char **argv) {
         g_img = NULL;
     }
     lua_close(L);
+    x86_cleanup();
     return 0;
 }

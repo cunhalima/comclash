@@ -1,9 +1,10 @@
 DOSBOX=dosbox
 BUILDER=builder/builder
+MDIR=patch/meta/
 
-.PHONY: all exe setup-original setup-mlook run gen gclean builder bclean compare reset val sql
+.PHONY: all exe setup-original setup-mlook run gen gclean builder bclean compare reset val sql src compare walk
 
-all: $(EXE)
+all: exe
 
 setup-original:
 	@echo "%define TARGET_ORIGINAL" > src/target.inc
@@ -20,7 +21,13 @@ src:
 	@$(MAKE) --no-print-directory -C $@
 
 run: exe
-	@$(DOSBOX) -conf dosbox.conf
+	@$(DOSBOX) -conf $(MDIR)dosbox.conf
+
+compare: builder exe
+	@./$(BUILDER) $(MDIR)compare.lua
+
+walk: builder
+	@./$(BUILDER) $(MDIR)walk.lua
 
 gclean:
 	@rm -rf src
@@ -32,14 +39,14 @@ bclean:
 
 reset: builder
 	@echo "Resetting db"
-	@./$(BUILDER) patch/reset.lua
+	@./$(BUILDER) $(MDIR)reset.lua
 
 val: builder
 	@echo "Running valgrind and resetting db"
-	@valgrind --tool=memcheck ./$(BUILDER) patch/reset.lua
+	@valgrind --tool=memcheck ./$(BUILDER) $(MDIR)reset.lua
 
 gen: builder
-	@./$(BUILDER) patch/gen.lua
+	@./$(BUILDER) $(MDIR)gen.lua
 
 sql:
-	sqlite3 patch/db.db
+	sqlite3 $(MDIR)db.db

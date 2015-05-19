@@ -17,6 +17,7 @@ public:
     sqlq_t(sqlite3 *db, const char *str, int index_col_arg = -1, int sentinel_arg = 0);
     ~sqlq_t();
     void prepare(const char *str, int index_col_arg = -1, int sentinel_arg = 0);
+    void prepare(sqlite3 *db_arg, const char *str, int index_col_arg = -1, int sentinel_arg = 0);
     void bind_int(int pos, int v);
     void bind_null(int pos);
     void bind_str(int pos, const char *v);

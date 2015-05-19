@@ -1,0 +1,11 @@
+# example linker initialization file.
+# remember, don't put carets (^) in these!
+system begin 286
+    format dos
+end
+system begin 386
+    option osname='DOS/4G'
+    op stub=wstub.exe
+    format os2 le
+end
+@wlsystem.lnk

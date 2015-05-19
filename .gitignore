@@ -29,7 +29,6 @@
 builder/builder
 
 # patches (these files are automatically generated)
-patch/execfg.lua
 patch/db.db
 
 # src diretory
@@ -38,3 +37,6 @@ src/*
 
 # Doxygen doc
 builder/doc/*
+
+# links dir
+links/
