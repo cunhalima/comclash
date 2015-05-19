@@ -61,7 +61,7 @@ Source tree:
 
     $ make bclean
 
-### Comparing the unmodded generated EXE with the original CDSHOCK.EXE:
+### Comparing the unmodded generated EXE with the original CCLASH.EXE:
 
     $ make compare
 

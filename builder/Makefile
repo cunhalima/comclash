@@ -21,9 +21,6 @@ run: $(TARGET)
 val: $(TARGET)
 	@valgrind --tool=memcheck ./$(TARGET)
 
-sql:
-	@sqlite3 data/cdshock.db
-
 .cpp.o:
 	@$(CPP) -c $(CPPFLAGS) $^ -o $@
 
