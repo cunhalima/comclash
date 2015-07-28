@@ -101,7 +101,6 @@ void IMG_endtransaction(Image_t *img) {
 
 bool IMG_dbopen(Image_t *img, const char *dbname) {
     assert(img != NULL);
-    printf("Opening DB\n");
     sqlite3_open(dbname, &img->db);
     return true;
 }
@@ -128,23 +127,48 @@ void IMG_sql(Image_t *img, const char *sql) {
     sqlite3_exec(img->db, sql, NULL, NULL, NULL);
 }
 
-void IMG_addlabel(Image_t *img, uaddr_t addr, const char *name) {
+void IMG_linklabout(Image_t *img, const char *name) {
+    assert(img != NULL);
+
+    sqlq_t q(img->db, "UPDATE tab_label SET address=NULL,module=NULL WHERE name=@A");
+    q.bind_str(1, name);
+    q.run();
+}
+
+void IMG_linkrelout(Image_t *img, uaddr_t addr, const char *name, const char *segname) {
+    assert(img != NULL);
+
+    sqlq_t qi(img->db, "INSERT OR IGNORE INTO tab_label(name, type, module, segment) VALUES(@N, 0, NULL, "
+        "(SELECT segid FROM tab_segment WHERE name=@B))");
+    qi.bind_str(1, name);
+    qi.bind_str(2, segname);
+    qi.run();
+    sqlq_t qu(img->db, "UPDATE tab_reloc SET label=(SELECT labid FROM tab_label WHERE name=@A) "
+                       "WHERE address=@C");
+    qu.bind_str(1, name);
+    qu.bind_int(2, addr);
+    qu.run();
+}
+
+
+void IMG_addlabel(Image_t *img, uaddr_t addr, const char *name, int type) {
     assert(img != NULL);
     // add the label
-    sqlq_t sqlab(img->db, "INSERT OR IGNORE INTO tab_label(address, name) VALUES(@A, @N)");
+    sqlq_t sqlab(img->db, "INSERT OR IGNORE INTO tab_label(address, name, type) VALUES(@A, @N, @T)");
     sqlab.bind_int(1, addr);
     if (name == NULL) {
         sqlab.bind_null(2);
     } else {
         sqlab.bind_str(2, name);
     }
+    sqlab.bind_int(3, type);
     sqlab.run();
 }
 
 void IMG_addreloc(Image_t *img, uaddr_t afrom, uaddr_t ato, int fix_size, int disp, int type) {
     assert(img != NULL);
 
-    IMG_addlabel(img, ato, NULL);
+    IMG_addlabel(img, ato, NULL, LABEL_STATIC);
     // add the relocation
     sqlq_t sqrel(img->db, "INSERT INTO tab_reloc(address, size, label, disp, type) "
                           "VALUES(@AFROM, @SIZE, (SELECT labid FROM tab_label WHERE address=@ATO), @DI, @REL)");
@@ -257,7 +281,7 @@ void IMG_createseg(Image_t *img, const char *name, const char *sclass, int align
     if (!s.run()) {
         printf("; Create segment error\n");
     } else {
-        printf("; Created segment %s at %08X size %d\n", name, addr, size);
+        //printf("; Created segment %s at %08X size %d\n", name, addr, size);
     }
 }
 
@@ -265,7 +289,7 @@ void IMG_createslice(Image_t *img, const char *name, uaddr_t addr) {
     assert(img != NULL);
     #if 1
 
-    printf("creating slice for %s\n", name);
+    //printf("creating slice for %s\n", name);
     // Create module if not created yet
     sqlq_t sqsel(img->db, "SELECT modid FROM tab_module WHERE name = @N");
     sqsel.bind_str(1, name);
@@ -337,7 +361,7 @@ void IMG_createslice(Image_t *img, const char *name, uaddr_t addr) {
     if (!ins.run()) {
         printf("; Create slice error\n");
     } else {
-        printf("; Created slice %s\n", name);
+        //printf("; Created slice %s\n", name);
     }
     #endif
 
@@ -465,7 +489,7 @@ void IMG_addrlabels(Image_t *img, int secid) {
         pos += len - 1;
     }
     IMG_endtransaction(img);
-    printf("; %d labels added\n", count);
+    //printf("; %d labels added\n", count);
 }
 
 void IMG_setmodules(Image_t *img) {
@@ -478,7 +502,7 @@ void IMG_setmodules(Image_t *img) {
         uaddr_t addr = slices.col_int(1);
         int size = slices.col_int(2);
         sqlq_t label(img->db, "UPDATE tab_label SET module=@A WHERE address >= @B AND address < @C");
-        printf("slice %d %08X %d\n", modid, addr, size);
+        //printf("slice %d %08X %d\n", modid, addr, size);
         label.bind_int(1, modid);
         label.bind_int(2, addr);
         label.bind_int(3, addr + size);
@@ -502,7 +526,7 @@ void IMG_setsegments(Image_t *img) {
         uaddr_t addr = q.col_int(1);
         int size = q.col_int(2);
         sqlq_t label(img->db, "UPDATE tab_label SET segment=@A WHERE address >= @B AND address < @C");
-        printf("setting segment %d %08X %d\n", segid, addr, size);
+        //printf("setting segment %d %08X %d\n", segid, addr, size);
         label.bind_int(1, segid);
         label.bind_int(2, addr);
         label.bind_int(3, addr + size);
@@ -516,14 +540,15 @@ void IMG_setsegments(Image_t *img) {
     IMG_endtransaction(img);
 }
 
-void IMG_setlabname(Image_t *img, uaddr_t addr, const char *name) {
+void IMG_setlabname(Image_t *img, uaddr_t addr, const char *name, int type) {
     assert(img != NULL);
 
     //printf("AAA\n");
     
-    sqlq_t q(img->db, "UPDATE tab_label SET name=@A WHERE address=@B");
+    sqlq_t q(img->db, "UPDATE tab_label SET name=@A, type=@D WHERE address=@B");
     q.bind_str(1, name);
-    q.bind_int(2, addr);
+    q.bind_int(2, type);
+    q.bind_int(3, addr);
     if (!q.run()) {
         printf("Error setting %08X name to %s\n", addr, name);
     }

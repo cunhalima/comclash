@@ -32,8 +32,9 @@ builder/builder
 patch/db.db
 
 # src diretory
-src/*
-!src/README
+src/*.asm
+src/*.obj
+src/*.map
 
 # Doxygen doc
 builder/doc/*

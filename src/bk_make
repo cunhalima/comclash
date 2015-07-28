@@ -1,0 +1,40 @@
+WLINK=../bin/wlink
+LDFLAGS=option nodefaultlibs option dosseg option map option quiet system dos4g
+EXE=../links/ccpath/ncc.exe
+SSOBJ=aa.obj  \
+    mingames.obj  \
+    bb.obj  \
+    canvas.obj  \
+    cc.obj  \
+    cursors.obj  \
+    dd.obj  \
+    vmouse.obj  \
+    ee.obj  \
+    event.obj  \
+    ee1.obj  \
+    bitmap.obj  \
+    ff.obj  \
+    ail_a.obj  \
+    gg.obj  \
+    ail_b.obj  \
+    hh.obj  \
+    ail_c.obj  \
+    ii.obj  \
+    ail_d.obj  \
+    jj.obj  \
+    ail_e.obj  \
+    kk.obj  \
+    key16.obj  \
+    stack.obj
+.PHONY: all clean
+
+all: $(EXE)
+
+clean:
+	@rm -f $(OBJ) $(EXE)
+
+$(EXE): $(OBJ)
+	$(WLINK) $(LDFLAGS) name $@ file { $(OBJ) }
+
+%.obj: %.asm
+	nasm -O0 -f obj $<

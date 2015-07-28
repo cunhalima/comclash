@@ -30,6 +30,7 @@ CREATE TABLE tab_label(
   name        TEXT UNIQUE,
   module      INTEGER,
   segment     INTEGER,
+  type        INTEGER NOT NULL,
   FOREIGN KEY(module) REFERENCES tab_module(modid) ON DELETE RESTRICT,
   FOREIGN KEY(segment) REFERENCES tab_segment(segid) ON DELETE RESTRICT
 );

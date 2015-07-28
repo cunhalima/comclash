@@ -1,13 +1,23 @@
+-- ##############################################################
+-- # This script is used to compare a rebuilding of
+-- # Complex Clash to its original EXE
+-- #------------------------------------------------------------
+-- # By Alex Reimann Cunha Lima, 2015
+-- #
+-- ##############################################################
 MDIR = "patch/meta/"
-print("Loading execfg.lua...")
+io.output():setvbuf("no")
+io.write("Initializing database ............................... ")
+dofile(MDIR .. "common.lua") -- IDA addressing stuff
 dofile(MDIR .. "execfg.lua") -- sets ORIGINAL_EXE and BUILD_PATH
-print("Opening database...")
-img_open(":memory:")
-print("Populating database tables...")
-sql_file(MDIR .. "tables.sql")
-print("Loading original EXE...")
+dofile(MDIR .. "memdb.lua")    -- use a memory database
+dofile(MDIR .. "tables.lua")
+print("[DONE]")
+io.write("Loading original EXE ................................ ")
 img_loadexe(ORIGINAL_EXE, true, true, true, false)
-print("Loading plan for section 1...")
+print("[DONE]")
+io.write("Loading plans ....................................... ")
 img_loadplan(1, MDIR .. "1plan.bin")
-print("Comparing images...")
+print("[DONE]")
+print("Comparing images:")
 img_compare(BUILD_PATH .. "/ncc.exe")

@@ -39,3 +39,9 @@ b) Function $$init_something$$ does some unknown stuff and then starts registeri
      ::0x204131::. In this exact plane, MMOD patches a jump to ::0x204511:: to circumvent the bindings
 
 
+
+
+Vamos ver _mouse_get_xy em WINSRC/INPUT/MOUSESYS.CPP (coisa do windows)
+parece estar mapeado para 0x2558D5
+ver
+

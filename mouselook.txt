@@ -1,0 +1,19 @@
+address     name
+-------     --------------
+202FDC      CMN_init_
+204057      init_something_
+24D2E4      regkeyproc_
+
+
+extern void regkeyproc( u32 key, int gs, cmdfn_t fnptr, int par );
+
+========================================================
+HOW KEY BINDING WORKS
+=======================================================
+
+a) Function $$CMN_Init_$$ calls function $$init_something_$$.
+
+b) Function $$init_something$$ does some unknown stuff and then starts registering keys at
+     ::204131::. In this exact place, the mod patches a jump to ::204511:: to circumvent the bindings
+
+

@@ -1,0 +1,64 @@
+#!/usr/bin/lua
+
+function uaddr_mk(secid, off)
+    return secid * 0x10000000 + off
+end
+
+function to_uaddr(addr)
+    if (addr >= 0x10000000) then
+        return addr
+    end
+    if (addr >= 0x2C6770) then
+        return uaddr_mk(4, addr - 0x2C6770)
+    end
+    if (addr >= 0x2AD000) then
+        return uaddr_mk(3, addr - 0x2AD000)
+    end
+    if (addr >= 0x1DE000) then
+        return uaddr_mk(1, addr - 0x1DE000)
+    end
+    if (addr >= 0x123000) then
+        return uaddr_mk(2, addr - 0x123000)
+    end
+    return 0
+end
+
+function to_ida(addr)
+    if (addr >= 0x40000000) then
+        return addr - 0x40000000 + 0x2C6770
+    end
+    if (addr >= 0x30000000) then
+        return addr - 0x30000000 + 0x2AD000
+    end
+    if (addr >= 0x20000000) then
+        return addr - 0x20000000 + 0x123000
+    end
+    if (addr >= 0x10000000) then
+        return addr - 0x10000000 + 0x1DE000
+    end
+    return addr
+end
+
+function other(addr)
+    if string.len(addr) >= 3 then
+        if string.sub(addr, 2, 2) == ':' then
+            local sec = string.sub(addr, 1, 1)
+            addr = string.sub(addr, 3, -1)
+            while string.len(addr) < 7 do
+                addr = '0' .. addr
+            end
+            addr = sec .. addr
+        end
+    end
+    addr = tonumber(addr, 16)
+    if addr >= 0x10000000 then
+        print(string.format("The IDA   addresss is %06X", to_ida(addr)))
+    else
+        print(string.format("The UADDR addresss is %08X", to_uaddr(addr)))
+    end
+end
+
+local num = arg[1]
+if num ~= nil then
+    other(num)
+end

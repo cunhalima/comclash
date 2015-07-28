@@ -231,7 +231,7 @@ bool IMG_comparereloc(Image_t *img, uaddr_t afrom, uaddr_t ato, int fix_size) {
                       "INNER JOIN tab_label AS l ON r.label = l.labid "
                       "WHERE r.address = @AFROM");// AND ((l.address + r.disp = @ATO) OR (l.address = 0)) AND r.size = @SZ");
     q.bind_int(1, afrom);
-    sprintf(err, "Relocation mismatch at %08X (%08X):\n", afrom, addr_to_ida(afrom));
+    sprintf(err, "Relocation mismatch at %08X (%06X):\n", afrom, addr_to_ida(afrom));
     if (!q.step()) {
         printf("%s", err);
         printf("    * Relocation not found in original\n");
@@ -254,7 +254,7 @@ bool IMG_comparereloc(Image_t *img, uaddr_t afrom, uaddr_t ato, int fix_size) {
                 errprinted = true;
                 printf("%s", err);
             }
-            printf("    * Original target = %08X and rebuilt target = %08X\n", laddr, ato);
+            printf("    * Original target = %08X(%06X) and rebuilt target = %08X(%06X)\n", laddr, addr_to_ida(laddr), ato, addr_to_ida(ato));
             ret = false;
         }
     }

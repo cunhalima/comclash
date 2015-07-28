@@ -22,9 +22,10 @@ public:
     void bind_null(int pos);
     void bind_str(int pos, const char *v);
     int col_int(int pos);
+    bool col_null(int pos);
     const char *col_str(int pos);
     bool ready(void);
-    int run(void);
+    bool run(void);
     int step(int *pindex = NULL);
     int answer(int sentinel = 0);
 };

@@ -69,7 +69,9 @@ void IMG_sql(Image_t *img, const char *sql);
 void *IMG_getptr(Image_t *img, uaddr_t addr);
 bool IMG_loadexe(Image_t *img, const char *filename, bool addrelocs, bool createsections, bool loaddata, bool compare);
 void IMG_addreloc(Image_t *img, uaddr_t afrom, uaddr_t ato, int fix_size, int disp, int type);
-void IMG_addlabel(Image_t *img, uaddr_t addr, const char *name);
+void IMG_addlabel(Image_t *img, uaddr_t addr, const char *name, int type);
+void IMG_linklabout(Image_t *img, const char *name);
+void IMG_linkrelout(Image_t *img, uaddr_t addr, const char *name, const char *segname);
 void IMG_movelabel(Image_t *img, int labid, uaddr_t oldaddr, uaddr_t newaddr);
 void IMG_fixrelocations(Image_t *img);
 void IMG_createseg(Image_t *img, const char *name, const char *sclass, int align, int use, uaddr_t addr, int priority, int size);
@@ -78,7 +80,11 @@ void IMG_fixlabels(Image_t *img, int secid);
 void IMG_addrlabels(Image_t *img, int secid);
 void IMG_setmodules(Image_t *img);
 void IMG_setsegments(Image_t *img);
-void IMG_setlabname(Image_t *img, uaddr_t addr, const char *name);
+void IMG_setlabname(Image_t *img, uaddr_t addr, const char *name, int type);
+
+#define LABEL_STATIC    0
+#define LABEL_PUBLIC    1
+#define LABEL_CONSTANT  16
 
 // disasm
 void IMG_disasm(Image_t *img);

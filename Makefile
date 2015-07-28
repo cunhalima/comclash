@@ -2,7 +2,7 @@ DOSBOX=dosbox
 BUILDER=builder/builder
 MDIR=patch/meta/
 
-.PHONY: all exe setup-original setup-mlook run gen gclean builder bclean compare reset val sql src compare walk
+.PHONY: all exe setup-original setup-mlook run gen aclean builder bclean compare ngen pgen val sql src compare walk test
 
 all: exe
 
@@ -29,21 +29,24 @@ compare: builder exe
 walk: builder
 	@./$(BUILDER) $(MDIR)walk.lua
 
-gclean:
-	@rm -rf src
-	@mkdir src
-	@echo "Don't edit files here: they will be overwritten" > src/README
+aclean:
+	@$(MAKE) --no-print-directory -C src aclean
 
 bclean:
 	@$(MAKE) --no-print-directory -C builder clean
 
-reset: builder
-	@echo "Resetting db"
-	@./$(BUILDER) $(MDIR)reset.lua
+ngen: builder
+	@./$(BUILDER) $(MDIR)ngen.lua
+
+pgen: builder
+	@./$(BUILDER) $(MDIR)pgen.lua
+
+test:
+	@./$(BUILDER) $(MDIR)test.lua
 
 val: builder
 	@echo "Running valgrind and resetting db"
-	@valgrind --tool=memcheck ./$(BUILDER) $(MDIR)reset.lua
+	@valgrind --tool=memcheck ./$(BUILDER) $(MDIR)ngen.lua
 
 gen: builder
 	@./$(BUILDER) $(MDIR)gen.lua

@@ -210,7 +210,7 @@ bool IMG_loadexe(Image_t *img, const char *filename, bool addrelocs, bool create
     }
     if (addrelocs || createsections) {
         IMG_begintransaction(img);
-        printf("; Loading %s\n", filename);
+        //printf("; Loading %s\n", filename);
     }
     if (compare) {
         printf("Comparing against %s\n", filename);
@@ -248,7 +248,7 @@ bool IMG_loadexe(Image_t *img, const char *filename, bool addrelocs, bool create
         reloc_base = BUF_read32(inbuf);
         (void)reloc_base;
         secflags = BUF_read32(inbuf);
-        printf("; %08X\n", secflags);
+        //printf("; %08X\n", secflags);
         mysecflags = 32;
         if (!(secflags & 0x2000)) {
             mysecflags = 16;
@@ -436,7 +436,7 @@ bool IMG_loadexe(Image_t *img, const char *filename, bool addrelocs, bool create
         }
     }
     if (addrelocs) {
-        IMG_addlabel(img, uaddr_mk(code_section, header->eip), "..start");
+        IMG_addlabel(img, uaddr_mk(code_section, header->eip), "..start", LABEL_STATIC);
     }
     if (createsections || addrelocs) {
         IMG_endtransaction(img);

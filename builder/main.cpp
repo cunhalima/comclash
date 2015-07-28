@@ -199,7 +199,28 @@ static int l_img_walkplan(lua_State *L) {
 static int l_NA(lua_State *L) {
     uaddr_t addr = luaL_checkinteger(L, 1);
     const char *name = luaL_checkstring(L, 2);
-    IMG_setlabname(g_img, addr, name);
+    IMG_setlabname(g_img, addr, name, LABEL_STATIC);
+    return 0;
+}
+
+static int l_NP(lua_State *L) {
+    uaddr_t addr = luaL_checkinteger(L, 1);
+    const char *name = luaL_checkstring(L, 2);
+    IMG_setlabname(g_img, addr, name, LABEL_PUBLIC);
+    return 0;
+}
+
+static int l_img_linklabout(lua_State *L) {
+    const char *name = luaL_checkstring(L, 1);
+    IMG_linklabout(g_img, name);
+    return 0;
+}
+
+static int l_img_linkrelout(lua_State *L) {
+    uaddr_t addr = luaL_checkinteger(L, 1);
+    const char *name = luaL_checkstring(L, 2);
+    const char *sname = luaL_checkstring(L, 3);
+    IMG_linkrelout(g_img, addr, name, sname);
     return 0;
 }
 
@@ -231,6 +252,9 @@ int main(int argc, char **argv) {
     lua_regfun(L, begin_transaction);
     lua_regfun(L, end_transaction);
     lua_regfun(L, NA); // set label name (ASSEMBLY -- no underscore)
+    lua_regfun(L, NP); // set label name (ASSEMBLY -- no underscore) PUBLIC
+    lua_regfun(L, img_linklabout);
+    lua_regfun(L, img_linkrelout);
     if (luaL_dofile(L, argv[1])) {
         printf("LUA ERROR: %s\n", lua_tostring(L, -1));
     }

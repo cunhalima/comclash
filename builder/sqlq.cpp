@@ -26,6 +26,10 @@ sqlq_t::~sqlq_t() {
     }
 }
 
+bool sqlq_t::col_null(int pos) {
+    return (sqlite3_column_type(sta, pos) == SQLITE_NULL);
+}
+
 int sqlq_t::col_int(int pos) {
     return sqlite3_column_int(sta, pos);
 }
@@ -69,7 +73,7 @@ int sqlq_t::answer(int sentinel) {
     return sentinel;
 }
 
-int sqlq_t::run(void) {
+bool sqlq_t::run(void) {
     int res = sqlite3_step(sta);
     return (res == SQLITE_DONE);
 }

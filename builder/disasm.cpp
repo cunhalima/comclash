@@ -112,21 +112,28 @@ void Disasm::writeexterns(int modid) {
     }
     #endif
     // EXTERN --- referenced by relocs with our modid to labels with different modid
+    // FIXME coloquei type 16 pra nao gerar extern pras constantes LABEL_CONSTANT
     sqlq_t x(img->db, "SELECT l.address, l.name, s.name, r.address "
                       "FROM tab_label AS l "
                       "INNER JOIN tab_reloc AS r ON r.label = l.labid "
                       "INNER JOIN tab_segment AS s ON l.segment = s.segid "
-                      "WHERE (r.module = @A) AND ((l.module <> r.module) OR ((l.module IS NULL) AND (l.address <= 1))) "
+                      "WHERE (r.module = @A) AND ((l.module <> r.module) OR ((l.module IS NULL))) "
                       "ORDER BY l.address ASC"); // hack edata e end addr 0 e 1
                       //"WHERE (r.module = @A) AND ((l.module IS NOT NULL) OR (l.address <= 1)) AND (l.module <> r.module)"); // hack edata e end addr 0 e 1
+                      //"WHERE (r.module = @A) AND ((l.module <> r.module) OR ((l.module IS NULL) AND (l.type < 16))) "
     x.bind_int(1, modid);
-    uaddr_t last_laddr = 0x70000000;
+    uaddr_t last_laddr = -1;
     while(x.step()) {
-        uaddr_t laddr = x.col_int(0);
-        if (laddr == last_laddr) {
-            continue;
+        uaddr_t laddr;
+        if (x.col_null(0)) {
+            laddr = -1;
+        } else {
+            laddr = x.col_int(0);
+            if (laddr == last_laddr) {
+                continue;
+            }
+            last_laddr = laddr;
         }
-        last_laddr = laddr;
         const char *lname = x.col_str(1);
         const char *sname = x.col_str(2);
         uaddr_t raddr = x.col_int(3);
@@ -154,10 +161,11 @@ void Disasm::writeexterns(int modid) {
 }
 
 void Disasm::writeglobals(int modid) {
+    // LABEL_PUBLIC = 1 se for diferente, mudar o SQL Abaixo!!! FIXME
     // GLOBAL --- referenced by relocs with different modid to our labels (our modid)
     sqlq_t x(img->db, "SELECT DISTINCT l.address, l.name FROM tab_label AS l INNER JOIN tab_reloc AS r "
                       "ON r.label = l.labid "
-                      "WHERE (l.module = @A) AND (l.module <> r.module) ORDER BY l.address ASC");
+                      "WHERE (l.module = @A) AND ((l.type = 1) OR (l.module <> r.module)) ORDER BY l.address ASC");
     x.bind_int(1, modid);
     while(x.step()) {
         makelabname(x.col_int(0), x.col_str(1));
@@ -166,12 +174,12 @@ void Disasm::writeglobals(int modid) {
 }
 
 void Disasm::disasmmodules(void) {
-    printf("modules\n");
+    //printf("modules\n");
     sqlq_t modules(img->db, "SELECT modid FROM tab_module");
     while (modules.step()) {
         int modid = modules.col_int(0);
         getfilename(modid);
-        printf("%s\n", filename);
+        //printf("%s\n", filename);
         fd = fopen(filename, "w");
         fprintf(fd, "%s", vim_modeline);
         fprintf(fd, ";---------------------------------\n");
@@ -526,7 +534,7 @@ void Disasm::disasmslice(int modid, uaddr_t start, uaddr_t end) {
 }
 
 void Disasm::disasmslices(void) {
-    printf("slices\n");
+    //printf("slices\n");
     // slices query
     sqlq_t slices(img->db, "SELECT module, address, size FROM tab_modslice");
     // segment query
@@ -552,7 +560,7 @@ void Disasm::disasmslices(void) {
         uaddr_t addr = slices.col_int(1);
         int size = slices.col_int(2);
         getfilename(modid);
-        printf("%s\n", filename);
+        //printf("%s\n", filename);
         fd = fopen(filename, "a");
         disasmslice(modid, addr, addr + size);
         fclose(fd);
@@ -562,10 +570,68 @@ void Disasm::disasmslices(void) {
 
 void Disasm::makemkfile(void) {
     sprintf(filename, "src/Makefile");
+    Buffer_t *fin = BUF_createfromfilecstr(filename);
+    if (fin == NULL) {
+        return;
+    }
+    const char *sin = (const char *)BUF_getptr(fin);
+    bool colz = true;
+    int i = 0;
+    int start_eating = 0;
+    int end_eating = 0;
+    for (int i = 0; (sin[i] != '\0') && (end_eating == 0); i++) {
+        char c = sin[i];
+        if (!start_eating) {
+            if (colz && c == 'S') {
+                if (strncmp(&sin[i], "SSOBJ=", 6) == 0) {
+                    start_eating = i;
+                }
+            }
+            colz = false;
+            if (c == '\n' || c == '\r') {
+                colz = true;
+            }
+        } else {
+            if ((c == '\n') && (sin[i - 1] != '\\') && (sin[i - 2] != '\\')) {
+                end_eating = i;
+            }
+        }
+    }
+    //if (start_eating) {
+        //printf("oooo\n");
+    //}
+    if (start_eating && end_eating) {
+        fd = fopen(filename, "w");
+        fwrite(sin, 1, start_eating, fd);
+
+
+        fprintf(fd, "SSOBJ=");
+        sqlq_t modules(img->db, "SELECT DISTINCT name FROM tab_modslice INNER JOIN tab_module "
+                                "ON tab_modslice.module = tab_module.modid ORDER BY tab_modslice.address");
+        bool first = true;
+        while (modules.step()) {
+            if (!first) {
+                fprintf(fd, " \\\n    ");
+            }
+            first = false;
+            fprintf(fd, "%s.obj ", modules.col_str(0));
+        }
+        fprintf(fd, " \\\n    stack.obj");
+
+
+        fwrite(&sin[end_eating], 1, strlen(&sin[end_eating]), fd);
+        fclose(fd);
+    }
+    BUF_free(fin);
+    #if 0
+    sprintf(filename, "src/Makefile");
     fd = fopen(filename, "w");
-    fprintf(fd, "WLINK=/home/alex/ow/binl/wlink\n");
+    //fprintf(fd, "WLINK=/home/alex/ow/binl/wlink\n");
+    fprintf(fd, "WLINK=../bin/wlink\n");
     fprintf(fd, "LDFLAGS=option nodefaultlibs option dosseg option map option quiet system dos4g\n");
     fprintf(fd, "EXE=../links/ccpath/ncc.exe\n");
+
+
     fprintf(fd, "OBJ=");
     sqlq_t modules(img->db, "SELECT DISTINCT name FROM tab_modslice INNER JOIN tab_module "
                             "ON tab_modslice.module = tab_module.modid ORDER BY tab_modslice.address");
@@ -578,6 +644,8 @@ void Disasm::makemkfile(void) {
         fprintf(fd, "%s.obj ", modules.col_str(0));
     }
     fprintf(fd, " \\\n    stack.obj\n");
+
+
     fprintf(fd, ".PHONY: all clean\n\n");
     fprintf(fd, "all: $(EXE)\n\n");
     fprintf(fd, "clean:\n");
@@ -587,6 +655,7 @@ void Disasm::makemkfile(void) {
     fprintf(fd, "%%.obj: %%.asm\n");
     fprintf(fd, "\tnasm -O0 -f obj $<\n");
     fclose(fd);
+    #endif
 }
 
 void Disasm::copyfile(const char *name) {
@@ -598,10 +667,10 @@ void Disasm::copyfile(const char *name) {
 }
 
 void Disasm::copyfiles(void) {
-    copyfile("xinst.inc");
-    copyfile("wlsystem.lnk");
-    copyfile("wlink.lnk");
-    copyfile("wstub.exe");
+    //copyfile("xinst.inc");
+    //copyfile("wlsystem.lnk");
+    //copyfile("wlink.lnk");
+    //copyfile("wstub.exe");
 }
 
 Disasm::Disasm(void) {

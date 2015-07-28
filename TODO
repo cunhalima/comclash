@@ -1,3 +1,31 @@
+Evitar esse negocio de reescrever todos os ASMS todas as vezes
+Evitar esse negocio de copiar arquivos dos mods. Manter eles por causa do time deles pro makefile
+
+
+
+Fazer um names.map com todos os nomes das variaveis
+Fazer um adjust.lua com todos os ajustes de relocs e de posicoes de variaveis:
+    ML(0x123445, 0x12444)   --> reposiciona a label e ajusa as referencias a ela com o disp
+    RL(0x134143)            --> remove a label
+Fazer um patch.asm com os patches a serem aplicados (para cada linha etc)
+;@@@ L          --> execute lua code
+        copyfile("mouselook.c")
+        
+;@@@ A 12344E   --> after label placement
+        pusha
+        call    myfunc_
+        popa
+
+;@@@ B 12544E   --> after label placement
+        test    eax,ecx
+        jz      here
+
+;@@@ S 124334 133444 --> skip X bytes from 124334
+
+;@@@ E          --> END PATCHES
+
+
+
 Terminar o add slice (colocar em ordem os slcies que ja tem pra achar o tamanho)
 
 talvez terminar o swap do image.cpp
